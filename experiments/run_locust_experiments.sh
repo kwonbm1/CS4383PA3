@@ -10,7 +10,7 @@
 #   ./experiments/run_locust_experiments.sh                        # default host
 #   ./experiments/run_locust_experiments.sh http://localhost:30601  # custom host
 # ──────────────────────────────────────────────────────────────
-set -euo pipefail
+set -uo pipefail
 
 HOST="${1:-http://172.16.2.136:30601}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -54,7 +54,7 @@ for entry in "${SCENARIOS[@]}"; do
         -t "$duration" \
         --csv "$csv_prefix" \
         --csv-full-history \
-        --skip-log 2>&1 | tail -5
+        --skip-log 2>&1 | tail -5 || true
 
     echo "  ✓ ${name} complete → ${out_dir}/"
 done
