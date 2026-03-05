@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from typing import Dict, List, Any, Tuple
 
@@ -9,9 +10,10 @@ import streamlit as st
 # -----------------------------
 # Config
 # -----------------------------
-# Multi-VM: Ordering service runs on VM1
-VM1_ORDERING = "172.16.5.77"
-DEFAULT_ORDERING_BASE_URL = f"http://{VM1_ORDERING}:5001"
+# PA2: Config via env for K8s multi-cluster (NodePort). Defaults = PA1 multi-VM.
+ORDERING_HOST = os.environ.get("ORDERING_HOST", "172.16.5.77")
+ORDERING_HTTP_PORT = os.environ.get("ORDERING_HTTP_PORT", "5001")
+DEFAULT_ORDERING_BASE_URL = f"http://{ORDERING_HOST}:{ORDERING_HTTP_PORT}"
 DEFAULT_ORDER_ENDPOINT = "/api/order"
 DEFAULT_RESTOCK_ENDPOINT = "/api/restock"
 DEFAULT_TIMEOUT_SECS = 25  # ordering→inventory→robots+pricing can exceed 10s

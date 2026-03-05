@@ -1,4 +1,5 @@
 from concurrent import futures
+import os
 import grpc
 
 from proto import common_pb2 as pb2
@@ -78,4 +79,5 @@ def serve(grpc_host="0.0.0.0", grpc_port=50052):
 
 
 if __name__ == "__main__":
-    serve()
+    port = int(os.environ.get("PRICING_GRPC_PORT", "50052"))
+    serve(grpc_host="0.0.0.0", grpc_port=port)

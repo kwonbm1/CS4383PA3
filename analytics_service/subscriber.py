@@ -1,12 +1,14 @@
 import argparse
+import os
 import zmq
 
 from fbschemas.grocery.fb import AnalyticsEvent
 
 
-# Multi-VM: Analytics (VM3) subscribes to Ordering (VM1) analytics stream
-VM1_ORDERING = "172.16.5.77"
-DEFAULT_ZMQ_SUB_ADDR = f"tcp://{VM1_ORDERING}:5557"
+# PA2: Config via env for K8s multi-cluster (NodePort). Defaults = PA1 multi-VM.
+ORDERING_HOST = os.environ.get("ORDERING_HOST", "172.16.5.77")
+ORDERING_ZMQ_PORT = os.environ.get("ORDERING_ZMQ_PORT", "5557")
+DEFAULT_ZMQ_SUB_ADDR = f"tcp://{ORDERING_HOST}:{ORDERING_ZMQ_PORT}"
 
 
 class AnalyticsCollector:

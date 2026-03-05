@@ -1,0 +1,58 @@
+# PA2 C2: Ordering service. NodePort so clients (C1 or team VMs) can reach it.
+# Build & push: docker build -f ordering_service/Dockerfile . -t REGISTRY/team1/ordering-service:latest && docker push REGISTRY/team1/ordering-service:latest
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ordering-service
+  namespace: team10
+  labels:
+    app: ordering-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ordering-service
+  template:
+    metadata:
+      labels:
+        app: ordering-service
+    spec:
+      containers:
+        - name: ordering
+          image: 192.168.1.129:5000/team10/ordering-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5001
+              name: http
+            - containerPort: 5557
+              name: zmq
+          env:
+            - name: INVENTORY_HOST
+              value: "inventory-service"   # same cluster (C2)
+            - name: INVENTORY_GRPC_PORT
+              value: "50051"
+            - name: ORDERING_HTTP_PORT
+              value: "5001"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ordering-service
+  namespace: team10
+spec:
+  type: NodePort
+  selector:
+    app: ordering-service
+  ports:
+    - name: http
+      port: 5001
+      targetPort: 5001
+      nodePort: 30601
+    - name: zmq
+      port: 5557
+      targetPort: 5557
+      nodePort: 30657

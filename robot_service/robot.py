@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 import zmq
 import grpc
@@ -14,10 +15,12 @@ from fbschemas.grocery.fb import ItemQty, TaskType
 # ----------------------------
 # Constants
 # ----------------------------
-# Multi-VM: Robots (VM4) connect to Inventory (VM2)
-VM2_INVENTORY = "172.16.5.69"
-DEFAULT_INVENTORY_GRPC_ADDR = f"{VM2_INVENTORY}:50051"
-DEFAULT_ZMQ_SUB_ADDR = f"tcp://{VM2_INVENTORY}:5556"
+# PA2: Config via env for K8s multi-cluster (NodePort). Defaults = PA1 multi-VM.
+_DEFAULT_INV_HOST = os.environ.get("INVENTORY_HOST", "172.16.5.69")
+_DEFAULT_INV_GRPC_PORT = os.environ.get("INVENTORY_GRPC_PORT", "50051")
+_DEFAULT_INV_ZMQ_PORT = os.environ.get("INVENTORY_ZMQ_PORT", "5556")
+DEFAULT_INVENTORY_GRPC_ADDR = f"{_DEFAULT_INV_HOST}:{_DEFAULT_INV_GRPC_PORT}"
+DEFAULT_ZMQ_SUB_ADDR = f"tcp://{_DEFAULT_INV_HOST}:{_DEFAULT_INV_ZMQ_PORT}"
 
 AISLE_ITEMS = {
     "bread": ["bagels", "bread", "waffles", "tortillas", "buns"],

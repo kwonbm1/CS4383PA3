@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from typing import Dict, Any, List
@@ -14,10 +15,12 @@ from fbschemas.grocery.fb import AnalyticsEvent as FbAnalytics
 
 app = Flask(__name__)
 
-# Multi-VM: VM1=ordering, VM2=inventory
-VM2_INVENTORY = "172.16.5.69"
-INVENTORY_GRPC_ADDR = f"{VM2_INVENTORY}:50051"
-ANALYTICS_ZMQ_BIND = "tcp://*:5557"
+# PA2: Config via env for K8s multi-cluster (NodePort). Defaults = PA1 multi-VM IPs.
+INVENTORY_HOST = os.environ.get("INVENTORY_HOST", "172.16.5.69")
+INVENTORY_GRPC_PORT = os.environ.get("INVENTORY_GRPC_PORT", "50051")
+INVENTORY_GRPC_ADDR = f"{INVENTORY_HOST}:{INVENTORY_GRPC_PORT}"
+ANALYTICS_ZMQ_BIND = os.environ.get("ANALYTICS_ZMQ_BIND", "tcp://*:5557")
+HTTP_PORT = int(os.environ.get("ORDERING_HTTP_PORT", "5001"))
 
 # ----------------------------
 # ZMQ publisher for analytics (created once at module level)
@@ -216,4 +219,4 @@ def health():
 
 if __name__ == "__main__":
     # use_reloader=False because the ZMQ PUB socket is bound at module level
-    app.run(host="0.0.0.0", port=5001, debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=HTTP_PORT, debug=True, use_reloader=False)

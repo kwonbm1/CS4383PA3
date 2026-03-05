@@ -140,9 +140,7 @@ streamlit run client/app.py --server.port 8501
 | Analytics (VM3) → Ordering (VM1)  | tcp://172.16.5.77:5557  | ZMQ SUB  |
 | Client (browser) → Ordering (VM1) | http://172.16.5.77:5001 | HTTP     |
 
-These IPs are hardcoded in the service source files (`ordering_service/app.py`,
-`inventory_service/server.py`, `robot_service/robot.py`, `analytics_service/subscriber.py`,
-`client/app.py`). Change them if your VMs have different IPs.
+PA2: All endpoints are configurable via environment variables (defaults above). Use env vars for K8s multi-cluster (NodePort) deployment.
 
 ### Setup on each VM
 
@@ -257,3 +255,188 @@ Fixed per-unit prices (see `pricing_service/server.py`). Total = sum of
 - Robots retry gRPC calls up to 3 times and survive errors (they don't crash on
   network hiccups).
 - All services use insecure channels (no TLS). Use only in a controlled environment.
+
+---
+
+## PA2 Milestone 1: Deploy across K8s clusters (C2 + C3)
+
+Deploy the app so the **end-to-end pipeline** works across clusters. **Remote services use NodePort** so pods in one cluster can reach another (e.g. robots on C3 talk to inventory on C2). For Milestone 1 you only need **C2** (core) and **C3** (robots); the client can run on your team VM or laptop.
+
+### Cluster layout
+
+| Cluster | Role | Services |
+| ------- | ----- | -------- |
+| **C2** | Core | Ordering, Inventory, Pricing, Analytics |
+| **C3** | Warehouse | All 5 robots (bread, dairy, meat, produce, party) |
+| **Client** | Your team VM or Mac | Streamlit (points at C2 ordering NodePort) |
+
+Cluster master IPs: **C2=172.16.2.136**, **C3=172.16.3.137**. Deploy only in your team namespace (e.g. `team10`). This repo uses **team10** and **NodePorts in the 306xx range** to avoid conflicts with other teams.
+
+### 1. SSH config (one-time, on your Mac)
+
+You need **S26_BASTION.pem** (bastion) and **S26_CLUSTER.pem** (cluster masters). Put them in `~/.ssh/` with `chmod 0400`. Add to `~/.ssh/config`:
+
+```
+Host bastion
+    User cc
+    Hostname 129.114.25.220
+    Port 22
+    IdentityFile ~/.ssh/S26_BASTION.pem
+    StrictHostKeyChecking no
+    ForwardAgent yes
+
+Host c2
+    User cc
+    Hostname 172.16.2.136
+    Port 22
+    ProxyJump bastion
+    IdentityFile ~/.ssh/S26_CLUSTER.pem
+    StrictHostKeyChecking no
+    ForwardAgent yes
+
+Host c3
+    User cc
+    Hostname 172.16.3.137
+    Port 22
+    ProxyJump bastion
+    IdentityFile ~/.ssh/S26_CLUSTER.pem
+    StrictHostKeyChecking no
+    ForwardAgent yes
+```
+
+Then from your Mac: `ssh c2` and `ssh c3` land on the cluster masters.
+
+### 2. Build and push images (from a machine that can reach the registry)
+
+The private registry (e.g. **Reg2** `192.168.1.129:5000` for teams 6–10) is not reachable from a typical laptop. Use your **Chameleon team VM** (e.g. team10-vm1) where Docker can reach `192.168.1.129:5000`.
+
+**On the team VM (e.g. team10-vm1):**
+
+1. **Install Docker** (if not already):
+   ```bash
+   sudo apt-get update && sudo apt-get install -y docker.io
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker cc
+   ```
+   Log out and back in so `docker` works without sudo.
+
+2. **Allow insecure registry** (registry is HTTP):
+   ```bash
+   echo '{ "insecure-registries": ["192.168.1.129:5000"] }' | sudo tee /etc/docker/daemon.json
+   sudo systemctl restart docker
+   ```
+
+3. **Generate protobuf stubs** and fix imports (required so containers can import `proto` as a package):
+   ```bash
+   cd ~/CS4383PA2
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   cd proto
+   python -m grpc_tools.protoc -I . --python_out=. common.proto
+   python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=. \
+     ordering_inventory.proto inventory_pricing.proto robot_inventory.proto
+   cd ..
+   # Fix absolute imports so they work inside the proto package
+   sed -i 's/^import common_pb2 as/from . import common_pb2 as/' proto/ordering_inventory_pb2.py proto/ordering_inventory_pb2_grpc.py
+   sed -i 's/^import common_pb2 as/from . import common_pb2 as/' proto/inventory_pricing_pb2.py proto/inventory_pricing_pb2_grpc.py
+   sed -i 's/^import common_pb2 as/from . import common_pb2 as/' proto/robot_inventory_pb2.py proto/robot_inventory_pb2_grpc.py
+   sed -i 's/^import ordering_inventory_pb2 as/from . import ordering_inventory_pb2 as/' proto/ordering_inventory_pb2_grpc.py
+   sed -i 's/^import inventory_pricing_pb2 as/from . import inventory_pricing_pb2 as/' proto/inventory_pricing_pb2_grpc.py
+   sed -i 's/^import robot_inventory_pb2 as/from . import robot_inventory_pb2 as/' proto/robot_inventory_pb2_grpc.py
+   ```
+
+4. **Build and push** (team10, Reg2):
+   ```bash
+   cd ~/CS4383PA2
+   chmod +x scripts/build-and-push.sh
+   ./scripts/build-and-push.sh 192.168.1.129:5000 team10
+   ```
+
+All images will be at `192.168.1.129:5000/team10/<service>:latest`.
+
+### 3. Deploy on C2 (core services)
+
+**From your Mac**, copy the repo to C2:
+
+```bash
+scp -r /path/to/CS4383PA2 c2:/home/cc/team10/CS4383PA2
+```
+
+**On C2** (`ssh c2`):
+
+```bash
+cd /home/cc/team10/CS4383PA2
+kubectl apply -f k8s/namespace.yaml
+kubectl config set-context --current --namespace=team10
+
+kubectl apply -f k8s/pricing-service.yaml
+kubectl apply -f k8s/inventory-service.yaml
+kubectl apply -f k8s/ordering-service.yaml
+kubectl apply -f k8s/analytics-service.yaml
+
+kubectl get pods -n team10
+```
+
+Wait until `ordering-service`, `inventory-service`, `pricing-service`, and `analytics-service` are **1/1 Running**. If any Service fails with “port already allocated”, another team is using that NodePort; the repo uses **30601, 30651, 30656, 30652, 30657** for team10 to reduce conflicts.
+
+**Team10 NodePorts on C2:**
+
+| Service  | HTTP/gRPC | ZMQ  |
+| -------- | --------- | ----- |
+| Ordering | 30601     | 30657 |
+| Inventory| 30651 (gRPC) | 30656 |
+| Pricing  | 30652     | —     |
+
+Health check: `curl http://localhost:30601/health` on C2 should return `{"status":"ok"}`.
+
+### 4. Deploy robots on C3
+
+**From your Mac**, copy the repo to C3:
+
+```bash
+scp -r /path/to/CS4383PA2 c3:/home/cc/team10/CS4383PA2
+```
+
+**On C3** (`ssh c3`):
+
+```bash
+cd /home/cc/team10/CS4383PA2
+kubectl apply -f k8s/namespace.yaml
+kubectl config set-context --current --namespace=team10
+kubectl apply -f k8s/robots.yaml
+kubectl get pods -n team10
+```
+
+All five robot pods should become **1/1 Running**. They connect to C2 inventory at `172.16.2.136:30651` (gRPC) and `172.16.2.136:30656` (ZMQ), as set in `k8s/robots.yaml`.
+
+### 5. Run the client and verify end-to-end
+
+Run the Streamlit client on your **team VM** or **Mac** (no need to use C1 for Milestone 1):
+
+```bash
+cd /path/to/CS4383PA2
+source .venv/bin/activate   # if using venv
+export ORDERING_HOST=172.16.2.136
+export ORDERING_HTTP_PORT=30601
+streamlit run client/app.py --server.port 8501
+```
+
+Open the URL shown (e.g. `http://<VM-IP>:8501`). Place a small grocery order (e.g. 1 bread, 1 milk) and submit. You should get a success response with items and optional total price.
+
+**Verify in logs:**
+
+- **C2** – `kubectl logs deploy/ordering-service -n team10 --tail=20`
+- **C2** – `kubectl logs deploy/inventory-service -n team10 --tail=20`
+- **C3** – `kubectl logs deploy/robot-bread -n team10 --tail=15`
+
+You should see the order flow (HTTP → ordering → inventory → ZMQ to robots, robots report back, pricing, response). When this works, **Milestone 1 is complete**.
+
+### Environment variables (reference)
+
+| Variable | Used by | Meaning |
+| -------- | ------- | ------- |
+| `INVENTORY_HOST`, `INVENTORY_GRPC_PORT` | ordering, robots | Inventory (C2 IP + NodePort 30651) |
+| `INVENTORY_ZMQ_PORT` | robots | Inventory ZMQ (30656) |
+| `PRICING_HOST`, `PRICING_GRPC_PORT` | inventory | Pricing (same cluster: `pricing-service:50052`) |
+| `ORDERING_HOST`, `ORDERING_HTTP_PORT` | client | Ordering HTTP (C2 IP + 30601) |
+| `ORDERING_ZMQ_PORT`, `ORDERING_HOST` | analytics | Ordering ZMQ (same cluster: `ordering-service:5557`) |

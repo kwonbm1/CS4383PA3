@@ -1,4 +1,5 @@
 from concurrent import futures
+import os
 import sys
 import time
 import threading
@@ -23,9 +24,10 @@ from fbschemas.grocery.fb import ItemQty as FbItemQty
 # ----------------------------
 NUM_ROBOTS = 5
 BARRIER_TIMEOUT_SECS = 10
-# Multi-VM: VM2=inventory, VM3=pricing
-VM3_PRICING = "172.16.5.214"
-PRICING_GRPC_ADDR = f"{VM3_PRICING}:50052"
+# PA2: Config via env for K8s multi-cluster (NodePort). Defaults = PA1 multi-VM.
+PRICING_HOST = os.environ.get("PRICING_HOST", "172.16.5.214")
+PRICING_GRPC_PORT = os.environ.get("PRICING_GRPC_PORT", "50052")
+PRICING_GRPC_ADDR = f"{PRICING_HOST}:{PRICING_GRPC_PORT}"
 
 AISLE_ITEMS = {
     "bread": ["bagels", "bread", "waffles", "tortillas", "buns"],
@@ -428,4 +430,6 @@ def serve(grpc_host="0.0.0.0", grpc_port=50051, zmq_bind="tcp://*:5556"):
 
 
 if __name__ == "__main__":
-    serve()
+    grpc_port = int(os.environ.get("INVENTORY_GRPC_PORT", "50051"))
+    zmq_bind = os.environ.get("INVENTORY_ZMQ_BIND", "tcp://*:5556")
+    serve(grpc_host="0.0.0.0", grpc_port=grpc_port, zmq_bind=zmq_bind)
