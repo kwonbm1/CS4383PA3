@@ -1,10 +1,10 @@
 # PA2 C1 (or team VM): Streamlit client. Points to Ordering on C2 via NodePort.
-# Set ORDERING_HOST to C2 master IP (172.16.2.136) and ORDERING_HTTP_PORT=30601 (team10 NodePort).
+# Set ORDERING_HOST to C2 master IP (172.16.2.136) and ORDERING_HTTP_PORT=30601 (team9 NodePort).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client
-  namespace: team10
+  namespace: team9
   labels:
     app: client
 spec:
@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: 192.168.1.129:5000/team10/client:latest
+          image: 192.168.1.129:5000/team9/client:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8501
@@ -38,7 +38,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: client
-  namespace: team10
+  namespace: team9
 spec:
   type: NodePort
   selector:

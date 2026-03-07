@@ -1,12 +1,12 @@
 # PA2 C3 or C4: Five robots. Set INVENTORY_HOST to C2 master IP so they reach inventory via NodePort.
-# Example for C2 master 172.16.2.136: set env INVENTORY_HOST=172.16.2.136, INVENTORY_GRPC_PORT=30651, INVENTORY_ZMQ_PORT=30656 (team10 NodePorts)
+# Example for C2 master 172.16.2.136: set env INVENTORY_HOST=172.16.2.136, INVENTORY_GRPC_PORT=30651, INVENTORY_ZMQ_PORT=30656 (team9 NodePorts)
 # Replace REGISTRY and team name; apply on cluster where robots run (e.g. C3).
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-bread
-  namespace: team100
+  namespace: team9
   labels:
     app: robot
     aisle: bread
@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: robot
-          image: 192.168.1.129:5000/team10/robot-service:latest
+          image: 192.168.1.129:5000/team9/robot-service:latest
           imagePullPolicy: Always
           args: ["--aisle", "bread"]
           env:
@@ -38,7 +38,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-dairy
-  namespace: team10
+  namespace: team9
   labels:
     app: robot
     aisle: dairy
@@ -55,7 +55,7 @@ spec:
     spec:
       containers:
         - name: robot
-          image: 192.168.1.129:5000/team10/robot-service:latest
+          image: 192.168.1.129:5000/team9/robot-service:latest
           imagePullPolicy: Always
           args: ["--aisle", "dairy"]
           env:
@@ -70,7 +70,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-meat
-  namespace: team10
+  namespace: team9
   labels:
     app: robot
     aisle: meat
@@ -87,7 +87,7 @@ spec:
     spec:
       containers:
         - name: robot
-          image: 192.168.1.129:5000/team10/robot-service:latest
+          image: 192.168.1.129:5000/team9/robot-service:latest
           imagePullPolicy: Always
           args: ["--aisle", "meat"]
           env:
@@ -102,7 +102,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-produce
-  namespace: team10
+  namespace: team9
   labels:
     app: robot
     aisle: produce
@@ -119,7 +119,7 @@ spec:
     spec:
       containers:
         - name: robot
-          image: 192.168.1.129:5000/team10/robot-service:latest
+          image: 192.168.1.129:5000/team9/robot-service:latest
           imagePullPolicy: Always
           args: ["--aisle", "produce"]
           env:
@@ -134,7 +134,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-party
-  namespace: team10
+  namespace: team9
   labels:
     app: robot
     aisle: party
@@ -151,7 +151,7 @@ spec:
     spec:
       containers:
         - name: robot
-          image: 192.168.1.129:5000/team10/robot-service:latest
+          image: 192.168.1.129:5000/team9/robot-service:latest
           imagePullPolicy: Always
           args: ["--aisle", "party"]
           env:

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PA2 Milestone 1: Build and push images to private registry.
 # Usage: ./scripts/build-and-push.sh [REGISTRY] [TEAM]
-# Example: ./scripts/build-and-push.sh 192.168.1.129:5000 team10
+# Example: ./scripts/build-and-push.sh 192.168.1.129:5000 team9
 # Run from repo root. Requires docker login to registry.
 
 set -e

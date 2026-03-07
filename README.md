@@ -270,7 +270,7 @@ Deploy the app so the **end-to-end pipeline** works across clusters. **Remote se
 | **C3** | Warehouse | All 5 robots (bread, dairy, meat, produce, party) |
 | **Client** | Your team VM or Mac | Streamlit (points at C2 ordering NodePort) |
 
-Cluster master IPs: **C2=172.16.2.136**, **C3=172.16.3.137**. Deploy only in your team namespace (e.g. `team10`). This repo uses **team10** and **NodePorts in the 306xx range** to avoid conflicts with other teams.
+Cluster master IPs: **C2=172.16.2.136**, **C3=172.16.3.137**. Deploy only in your team namespace (e.g. `team9`). This repo uses **team9** and **NodePorts in the 306xx range** to avoid conflicts with other teams.
 
 ### 1. SSH config (one-time, on your Mac)
 
@@ -308,9 +308,9 @@ Then from your Mac: `ssh c2` and `ssh c3` land on the cluster masters.
 
 ### 2. Build and push images (from a machine that can reach the registry)
 
-The private registry (e.g. **Reg2** `192.168.1.129:5000` for teams 6–10) is not reachable from a typical laptop. Use your **Chameleon team VM** (e.g. team10-vm1) where Docker can reach `192.168.1.129:5000`.
+The private registry (e.g. **Reg2** `192.168.1.129:5000` for teams 6–10) is not reachable from a typical laptop. Use your **Chameleon team VM** (e.g. team9-vm1) where Docker can reach `192.168.1.129:5000`.
 
-**On the team VM (e.g. team10-vm1):**
+**On the team VM (e.g. team9-vm1):**
 
 1. **Install Docker** (if not already):
    ```bash
@@ -345,39 +345,39 @@ The private registry (e.g. **Reg2** `192.168.1.129:5000` for teams 6–10) is no
    sed -i 's/^import robot_inventory_pb2 as/from . import robot_inventory_pb2 as/' proto/robot_inventory_pb2_grpc.py
    ```
 
-4. **Build and push** (team10, Reg2):
+4. **Build and push** (team9, Reg2):
    ```bash
    cd ~/CS4383PA2
    chmod +x scripts/build-and-push.sh
-   ./scripts/build-and-push.sh 192.168.1.129:5000 team10
+   ./scripts/build-and-push.sh 192.168.1.129:5000 team9
    ```
 
-All images will be at `192.168.1.129:5000/team10/<service>:latest`.
+All images will be at `192.168.1.129:5000/team9/<service>:latest`.
 
 ### 3. Deploy on C2 (core services)
 
 **From your Mac**, copy the repo to C2:
 
 ```bash
-scp -r /path/to/CS4383PA2 c2:/home/cc/team10/CS4383PA2
+scp -r /path/to/CS4383PA2 c2:/home/cc/team9/CS4383PA2
 ```
 
 **On C2** (`ssh c2`):
 
 ```bash
-cd /home/cc/team10/CS4383PA2
+cd /home/cc/team9/CS4383PA2
 kubectl apply -f k8s/namespace.yaml
-kubectl config set-context --current --namespace=team10
+kubectl config set-context --current --namespace=team9
 
 kubectl apply -f k8s/pricing-service.yaml
 kubectl apply -f k8s/inventory-service.yaml
 kubectl apply -f k8s/ordering-service.yaml
 kubectl apply -f k8s/analytics-service.yaml
 
-kubectl get pods -n team10
+kubectl get pods -n team9
 ```
 
-Wait until `ordering-service`, `inventory-service`, `pricing-service`, and `analytics-service` are **1/1 Running**. If any Service fails with “port already allocated”, another team is using that NodePort; the repo uses **30601, 30651, 30656, 30652, 30657** for team10 to reduce conflicts.
+Wait until `ordering-service`, `inventory-service`, `pricing-service`, and `analytics-service` are **1/1 Running**. If any Service fails with “port already allocated”, another team is using that NodePort; the repo uses **30601, 30651, 30656, 30652, 30657** for team9 to reduce conflicts.
 
 **Team10 NodePorts on C2:**
 
@@ -394,17 +394,17 @@ Health check: `curl http://localhost:30601/health` on C2 should return `{"status
 **From your Mac**, copy the repo to C3:
 
 ```bash
-scp -r /path/to/CS4383PA2 c3:/home/cc/team10/CS4383PA2
+scp -r /path/to/CS4383PA2 c3:/home/cc/team9/CS4383PA2
 ```
 
 **On C3** (`ssh c3`):
 
 ```bash
-cd /home/cc/team10/CS4383PA2
+cd /home/cc/team9/CS4383PA2
 kubectl apply -f k8s/namespace.yaml
-kubectl config set-context --current --namespace=team10
+kubectl config set-context --current --namespace=team9
 kubectl apply -f k8s/robots.yaml
-kubectl get pods -n team10
+kubectl get pods -n team9
 ```
 
 All five robot pods should become **1/1 Running**. They connect to C2 inventory at `172.16.2.136:30651` (gRPC) and `172.16.2.136:30656` (ZMQ), as set in `k8s/robots.yaml`.
@@ -425,9 +425,9 @@ Open the URL shown (e.g. `http://<VM-IP>:8501`). Place a small grocery order (e.
 
 **Verify in logs:**
 
-- **C2** – `kubectl logs deploy/ordering-service -n team10 --tail=20`
-- **C2** – `kubectl logs deploy/inventory-service -n team10 --tail=20`
-- **C3** – `kubectl logs deploy/robot-bread -n team10 --tail=15`
+- **C2** – `kubectl logs deploy/ordering-service -n team9 --tail=20`
+- **C2** – `kubectl logs deploy/inventory-service -n team9 --tail=20`
+- **C3** – `kubectl logs deploy/robot-bread -n team9 --tail=15`
 
 You should see the order flow (HTTP → ordering → inventory → ZMQ to robots, robots report back, pricing, response). When this works, **Milestone 1 is complete**.
 

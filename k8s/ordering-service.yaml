@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ordering-service
-  namespace: team10
+  namespace: team9
   labels:
     app: ordering-service
 spec:
@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: ordering
-          image: 192.168.1.129:5000/team10/ordering-service:latest
+          image: 192.168.1.129:5000/team9/ordering-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5001
@@ -42,7 +42,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ordering-service
-  namespace: team10
+  namespace: team9
 spec:
   type: NodePort
   selector:

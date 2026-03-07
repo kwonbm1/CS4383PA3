@@ -1,7 +1,6 @@
-# PA2: Deploy in your team namespace only (team1, team2, ... team10).
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: team10
+  name: team9
   labels:
     app.kubernetes.io/part-of: cs4383-pa2
