@@ -1,0 +1,79 @@
+name: pa3-hil1
+
+topology:
+  nodes:
+    lan1:
+      kind: bridge
+    lan2:
+      kind: bridge
+
+    r1:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - ./frr/daemons:/etc/frr/daemons:ro
+        - ./frr/vtysh.conf:/etc/frr/vtysh.conf:ro
+        - ./frr/r1.conf:/etc/frr/frr.conf:ro
+      exec:
+        - ip link set dev lo up
+
+    r2:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - ./frr/daemons:/etc/frr/daemons:ro
+        - ./frr/vtysh.conf:/etc/frr/vtysh.conf:ro
+        - ./frr/r2.conf:/etc/frr/frr.conf:ro
+      exec:
+        - ip link set dev lo up
+
+    r3:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - ./frr/daemons:/etc/frr/daemons:ro
+        - ./frr/vtysh.conf:/etc/frr/vtysh.conf:ro
+        - ./frr/r3.conf:/etc/frr/frr.conf:ro
+      exec:
+        - ip link set dev lo up
+
+    r4:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - ./frr/daemons:/etc/frr/daemons:ro
+        - ./frr/vtysh.conf:/etc/frr/vtysh.conf:ro
+        - ./frr/r4.conf:/etc/frr/frr.conf:ro
+      exec:
+        - ip link set dev lo up
+
+    ingress-host:
+      kind: linux
+      image: alpine:3.20
+      exec:
+        - sh -lc "ip addr add 192.168.10.10/24 dev eth1"
+        - sh -lc "ip route add 192.168.20.0/24 via 192.168.10.1"
+
+    egress-host:
+      kind: linux
+      image: alpine:3.20
+      exec:
+        - sh -lc "ip addr add 192.168.20.10/24 dev eth1"
+        - sh -lc "ip route add 192.168.10.0/24 via 192.168.20.1"
+
+  links:
+    # WAN core links:
+    # high-hop lower-cost path: r1 -> r3 -> r2 -> r4 (10+10+10=30)
+    # low-hop higher-cost path: r1 -> r2 -> r4 (100+10=110)
+    - endpoints: ["r1:eth2", "r2:eth2"]
+    - endpoints: ["r1:eth3", "r3:eth2"]
+    - endpoints: ["r3:eth3", "r2:eth3"]
+    - endpoints: ["r2:eth4", "r4:eth2"]
+
+    # LAN 1 segment
+    - endpoints: ["lan1:r1-lan", "r1:eth1"]
+    - endpoints: ["lan1:ingress", "ingress-host:eth1"]
+
+    # LAN 2 segment
+    - endpoints: ["lan2:r4-lan", "r4:eth1"]
+    - endpoints: ["lan2:egress", "egress-host:eth1"]

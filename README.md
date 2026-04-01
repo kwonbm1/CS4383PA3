@@ -529,3 +529,60 @@ Refrigerators dominate traffic as specified in the assignment. Each grocery orde
 | high_load | 50 | 10/s | 120s | Stress test |
 | burst | 100 | 50/s | 60s | Sudden spike |
 | ramp_up | 50 | 1/s | 180s | Gradual increase |
+
+---
+
+## PA3 Milestone 1: Replace ContainerLab1 with OSPF topology
+
+The PA3 Milestone 1 artifacts are under `containerlab/hil1`.
+
+- Topology file: `containerlab/hil1/topology.clab.yml`
+- FRR OSPF configs: `containerlab/hil1/frr/`
+- Runbook and commands: `containerlab/hil1/README.md`
+- Evidence scripts:
+  - `containerlab/hil1/scripts/collect_ospf_state.sh`
+  - `containerlab/hil1/scripts/traceroute_path.sh`
+  - `containerlab/hil1/scripts/capture_router_interface.sh`
+
+### Run and verify Milestone 1
+
+Run on your team VM (where containerlab/docker are installed). First SSH to `team10-vm1`:
+
+```bash
+ssh -i ~/.ssh/team10key cc@129.114.25.180
+cd ~/CS4383PA3/containerlab/hil1
+
+# one-time host bridge setup for kind: bridge endpoints
+sudo ip link add name lan1 type bridge 2>/dev/null || true
+sudo ip link set lan1 up
+sudo ip link add name lan2 type bridge 2>/dev/null || true
+sudo ip link set lan2 up
+
+# clean deploy and convergence wait
+./scripts/destroy_hil1.sh || true
+./scripts/deploy_hil1.sh
+sleep 20
+
+# required evidence collection
+./scripts/collect_ospf_state.sh
+./scripts/traceroute_path.sh
+
+# quick spot checks
+docker exec clab-pa3-hil1-r1 vtysh -c "show ip ospf neighbor"
+docker exec clab-pa3-hil1-r1 vtysh -c "show ip route 192.168.20.0/24"
+docker exec clab-pa3-hil1-r4 vtysh -c "show ip route 192.168.10.0/24"
+```
+
+Milestone 1 is confirmed when:
+
+- `collect_ospf_state.sh` completes without `vtysh` errors
+- OSPF neighbors show `Full` state
+- `r1` learns `192.168.20.0/24` via OSPF and `r4` learns `192.168.10.0/24` via OSPF
+- traceroute from LAN1 reaches LAN2 and follows the lower-cost OSPF route
+
+Cleanup:
+
+```bash
+cd ~/CS4383PA3/containerlab/hil1
+./scripts/destroy_hil1.sh
+```
