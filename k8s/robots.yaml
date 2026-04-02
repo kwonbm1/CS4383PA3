@@ -1,15 +1,12 @@
 # PA2 C3 or C4: Five robots. Set INVENTORY_HOST to C2 master IP so they reach inventory via NodePort.
 # Example for C2 master 172.16.2.136: set env INVENTORY_HOST=172.16.2.136, INVENTORY_GRPC_PORT=30651, INVENTORY_ZMQ_PORT=30656 (team9 NodePorts)
-# Replace REGISTRY and team name; apply on cluster where robots run (e.g. C3).
+# Apply on cluster where robots run (e.g. C3).
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-bread
   namespace: team9
-  labels:
-    app: robot
-    aisle: bread
 spec:
   replicas: 1
   selector:
@@ -19,29 +16,25 @@ spec:
     metadata:
       labels:
         app: robot-bread
-        aisle: bread
     spec:
       containers:
-        - name: robot
-          image: 192.168.1.129:5000/team9/robot-service:latest
-          imagePullPolicy: Always
-          args: ["--aisle", "bread"]
-          env:
-            - name: INVENTORY_HOST
-              value: "172.16.2.136"
-            - name: INVENTORY_GRPC_PORT
-              value: "30651"
-            - name: INVENTORY_ZMQ_PORT
-              value: "30656"
+      - name: robot
+        image: 192.168.1.129:5000/team9/robot-service:latest
+        imagePullPolicy: Always
+        command: [ "python", "-m", "robot_service.robot", "--aisle", "bread" ]
+        env:
+        - name: INVENTORY_HOST
+          value: "172.16.5.69"
+        - name: INVENTORY_GRPC_PORT
+          value: "30651"
+        - name: INVENTORY_ZMQ_PORT
+          value: "30656"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-dairy
   namespace: team9
-  labels:
-    app: robot
-    aisle: dairy
 spec:
   replicas: 1
   selector:
@@ -51,29 +44,25 @@ spec:
     metadata:
       labels:
         app: robot-dairy
-        aisle: dairy
     spec:
       containers:
-        - name: robot
-          image: 192.168.1.129:5000/team9/robot-service:latest
-          imagePullPolicy: Always
-          args: ["--aisle", "dairy"]
-          env:
-            - name: INVENTORY_HOST
-              value: "172.16.2.136"
-            - name: INVENTORY_GRPC_PORT
-              value: "30651"
-            - name: INVENTORY_ZMQ_PORT
-              value: "30656"
+      - name: robot
+        image: 192.168.1.129:5000/team9/robot-service:latest
+        imagePullPolicy: Always
+        command: [ "python", "-m", "robot_service.robot", "--aisle", "dairy" ]
+        env:
+        - name: INVENTORY_HOST
+          value: "172.16.5.69"
+        - name: INVENTORY_GRPC_PORT
+          value: "30651"
+        - name: INVENTORY_ZMQ_PORT
+          value: "30656"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-meat
   namespace: team9
-  labels:
-    app: robot
-    aisle: meat
 spec:
   replicas: 1
   selector:
@@ -83,29 +72,25 @@ spec:
     metadata:
       labels:
         app: robot-meat
-        aisle: meat
     spec:
       containers:
-        - name: robot
-          image: 192.168.1.129:5000/team9/robot-service:latest
-          imagePullPolicy: Always
-          args: ["--aisle", "meat"]
-          env:
-            - name: INVENTORY_HOST
-              value: "172.16.2.136"
-            - name: INVENTORY_GRPC_PORT
-              value: "30651"
-            - name: INVENTORY_ZMQ_PORT
-              value: "30656"
+      - name: robot
+        image: 192.168.1.129:5000/team9/robot-service:latest
+        imagePullPolicy: Always
+        command: [ "python", "-m", "robot_service.robot", "--aisle", "meat" ]
+        env:
+        - name: INVENTORY_HOST
+          value: "172.16.5.69"
+        - name: INVENTORY_GRPC_PORT
+          value: "30651"
+        - name: INVENTORY_ZMQ_PORT
+          value: "30656"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-produce
   namespace: team9
-  labels:
-    app: robot
-    aisle: produce
 spec:
   replicas: 1
   selector:
@@ -115,29 +100,25 @@ spec:
     metadata:
       labels:
         app: robot-produce
-        aisle: produce
     spec:
       containers:
-        - name: robot
-          image: 192.168.1.129:5000/team9/robot-service:latest
-          imagePullPolicy: Always
-          args: ["--aisle", "produce"]
-          env:
-            - name: INVENTORY_HOST
-              value: "172.16.2.136"
-            - name: INVENTORY_GRPC_PORT
-              value: "30651"
-            - name: INVENTORY_ZMQ_PORT
-              value: "30656"
+      - name: robot
+        image: 192.168.1.129:5000/team9/robot-service:latest
+        imagePullPolicy: Always
+        command: [ "python", "-m", "robot_service.robot", "--aisle", "produce" ]
+        env:
+        - name: INVENTORY_HOST
+          value: "172.16.5.69"
+        - name: INVENTORY_GRPC_PORT
+          value: "30651"
+        - name: INVENTORY_ZMQ_PORT
+          value: "30656"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: robot-party
   namespace: team9
-  labels:
-    app: robot
-    aisle: party
 spec:
   replicas: 1
   selector:
@@ -147,17 +128,16 @@ spec:
     metadata:
       labels:
         app: robot-party
-        aisle: party
     spec:
       containers:
-        - name: robot
-          image: 192.168.1.129:5000/team9/robot-service:latest
-          imagePullPolicy: Always
-          args: ["--aisle", "party"]
-          env:
-            - name: INVENTORY_HOST
-              value: "172.16.2.136"
-            - name: INVENTORY_GRPC_PORT
-              value: "30651"
-            - name: INVENTORY_ZMQ_PORT
-              value: "30656"
+      - name: robot
+        image: 192.168.1.129:5000/team9/robot-service:latest
+        imagePullPolicy: Always
+        command: [ "python", "-m", "robot_service.robot", "--aisle", "party" ]
+        env:
+        - name: INVENTORY_HOST
+          value: "172.16.5.69"
+        - name: INVENTORY_GRPC_PORT
+          value: "30651"
+        - name: INVENTORY_ZMQ_PORT
+          value: "30656"
