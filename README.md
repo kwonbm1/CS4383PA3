@@ -754,3 +754,135 @@ This setup demonstrates:
 - loop handling via spanning tree protocol
 - dynamic MAC learning and improved performance
 - successful integration of simulated network conditions with distributed services
+
+---
+
+## PA3 Milestone 3: End-to-End Workload Experiments (With vs Without HIL)
+
+### Overview
+
+Milestone 3 runs the full Locust.io workload suite against the grocery ordering system in two configurations and compares tail latencies:
+
+1. **Without HIL** — traffic flows directly between K8s clusters over the network (no ContainerLab emulation in the path).
+2. **With HIL** — traffic between Cluster 1/2 traverses the OSPF WAN topology (HIL1) and traffic between Cluster 2/3 traverses the bridged LAN topology (HIL2).
+
+The same five scenarios (low\_load, medium\_load, high\_load, burst, ramp\_up) and the same 70/30 refrigerator/truck workload profile from PA2 are used so that results are directly comparable.
+
+---
+
+### Prerequisites
+
+- K8s services deployed on C2 (ordering, inventory, pricing, analytics) and C3 (robots) from Milestones 1 & 2
+- Python 3.10+ with dependencies installed (`pip install -r requirements.txt`)
+- For "with HIL" runs: both ContainerLab topologies deployed and traffic routed through them (see Milestones 1 & 2)
+- SSH tunnel to reach C2 ordering NodePort if running from a Mac:
+
+```bash
+ssh -L 30601:172.16.2.136:30601 bastion
+```
+
+---
+
+### Experiment Scenarios
+
+| Scenario    | Users | Spawn Rate | Duration | Purpose              |
+| ----------- | ----- | ---------- | -------- | -------------------- |
+| low\_load   | 5     | 1/s        | 60s      | Baseline             |
+| medium\_load| 20    | 5/s        | 90s      | Moderate concurrency |
+| high\_load  | 50    | 10/s       | 120s     | Stress test          |
+| burst       | 100   | 50/s       | 60s      | Sudden spike         |
+| ramp\_up    | 50    | 1/s        | 180s     | Gradual increase     |
+
+---
+
+### 1. Run experiments — Without HIL
+
+Make sure the ContainerLab topologies are **not** in the traffic path (services communicate directly via K8s NodePorts).
+
+```bash
+cd ~/CS4383PA3
+chmod +x experiments/PA3/run_pa3_experiments.sh
+
+./experiments/PA3/run_pa3_experiments.sh --mode without_hil --host http://localhost:30601
+```
+
+Results are saved to `experiments/PA3/results/without_hil/<scenario>/`.
+
+### 2. Run experiments — With HIL
+
+Deploy both ContainerLab topologies (HIL1 and HIL2) and ensure traffic is routed through them (see Milestone 1 and 2 deployment steps). Then run:
+
+```bash
+./experiments/PA3/run_pa3_experiments.sh --mode with_hil --host http://localhost:30601
+```
+
+Results are saved to `experiments/PA3/results/with_hil/<scenario>/`.
+
+### 3. Generate analysis and comparison plots
+
+Once both sets of experiments have completed:
+
+```bash
+python3 -m experiments.PA3.analyze_pa3_latencies
+```
+
+Or with explicit directories:
+
+```bash
+python3 -m experiments.PA3.analyze_pa3_latencies \
+    --results-dir experiments/PA3/results \
+    --plots-dir experiments/PA3/plots
+```
+
+The script prints a summary table to stdout and saves all plots to `experiments/PA3/plots/`.
+
+---
+
+### Output Plots
+
+| Plot File                              | Description                                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `cdf_<scenario>.png`                   | Per-scenario CDF overlay — refrigerator and truck latencies with and without HIL on the same axes |
+| `cdf_compare_api_order.png`            | Cross-scenario CDF for refrigerator requests, comparing with/without HIL                          |
+| `cdf_compare_api_restock.png`          | Cross-scenario CDF for truck requests, comparing with/without HIL                                 |
+| `percentile_bars_api_order.png`        | Grouped P50/P90/P95/P99 bar chart — refrigerator requests, with vs without HIL                    |
+| `percentile_bars_api_restock.png`      | Grouped P50/P90/P95/P99 bar chart — truck requests, with vs without HIL                           |
+| `hil_overhead_api_order.png`           | Absolute (ms) and percentage (%) latency increase from HIL — refrigerator requests                |
+| `hil_overhead_api_restock.png`         | Absolute (ms) and percentage (%) latency increase from HIL — truck requests                       |
+| `cdf_combined_all.png`                 | All scenarios and modes overlaid on a single CDF                                                  |
+
+---
+
+### File Structure
+
+```
+experiments/PA3/
+├── locustfile.py                 # Re-exports PA2 user classes for Locust
+├── run_pa3_experiments.sh        # Runner script (--mode with_hil|without_hil)
+├── analyze_pa3_latencies.py      # Comparative analysis and plot generation
+├── results/
+│   ├── without_hil/
+│   │   ├── low_load/             # CSV data per scenario
+│   │   ├── medium_load/
+│   │   ├── high_load/
+│   │   ├── burst/
+│   │   └── ramp_up/
+│   └── with_hil/
+│       ├── low_load/
+│       ├── medium_load/
+│       ├── high_load/
+│       ├── burst/
+│       └── ramp_up/
+└── plots/                        # Generated PNG plots
+```
+
+---
+
+### Workload Design
+
+| User Class         | Weight  | Simulates       | Request             | Wait Between Requests |
+| ------------------ | ------- | --------------- | ------------------- | --------------------- |
+| `RefrigeratorUser` | 7 (70%) | Smart fridges   | `POST /api/order`   | 1–3 s                 |
+| `TruckUser`        | 3 (30%) | Delivery trucks | `POST /api/restock` | 2–5 s                 |
+
+The workload is identical to PA2: refrigerators dominate traffic (~70%), each grocery order selects 1–10 random items, and each restock order selects 3–15 items with larger quantities.
