@@ -12,23 +12,22 @@ Usage (headless, example):
         --csv experiments/PA3/results/with_hil/low_load/low_load
 """
 
+import importlib.util
 import os
 import sys
 
-# Ensure the PA2 directory is on sys.path so Locust discovers user classes
-_pa2_dir = os.path.join(os.path.dirname(__file__), os.pardir, "PA2")
-_pa2_dir = os.path.abspath(_pa2_dir)
-if _pa2_dir not in sys.path:
-    sys.path.insert(0, _pa2_dir)
+# Load the PA2 locustfile by absolute path to avoid circular import
+# (both files are named locustfile.py, so sys.path tricks don't work).
+_pa2_locustfile = os.path.join(
+    os.path.dirname(__file__), os.pardir, "PA2", "locustfile.py"
+)
+_pa2_locustfile = os.path.abspath(_pa2_locustfile)
+
+_spec = importlib.util.spec_from_file_location("pa2_locustfile", _pa2_locustfile)
+_pa2 = importlib.util.module_from_spec(_spec)
+sys.modules["pa2_locustfile"] = _pa2
+_spec.loader.exec_module(_pa2)
 
 # Re-export everything Locust needs: user classes + event listeners
-from locustfile import (          # noqa: F401, E402
-    RefrigeratorUser,
-    TruckUser,
-    AISLES,
-    FLAT_ITEMS,
-    build_order_payload,
-    random_grocery_order,
-    random_restock_order,
-    big_restock_payload,
-)
+RefrigeratorUser = _pa2.RefrigeratorUser            # noqa: F811
+TruckUser = _pa2.TruckUser                          # noqa: F811
