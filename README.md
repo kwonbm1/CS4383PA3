@@ -675,6 +675,15 @@ Notes:
     sudo docker exec clab-hil2-robot5 ip addr add 10.0.0.15/24 dev eth1
     sudo docker exec clab-hil2-c2-host ip addr add 10.0.0.10/24 dev eth1
 
+#### 4. Forward inventory NodePorts to the C2 host
+
+Run on vm3 where traffic to `30651` / `30656` should reach the simulated inventory service at `10.0.0.10` (gRPC `50051`, ZMQ `5556`). Leave these running while testing:
+
+```bash
+sudo socat TCP-LISTEN:30651,fork,reuseaddr TCP:10.0.0.10:50051
+sudo socat TCP-LISTEN:30656,fork,reuseaddr TCP:10.0.0.10:5556
+```
+
 ---
 
 ### Integration with Kubernetes
