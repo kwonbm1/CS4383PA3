@@ -1,0 +1,56 @@
+---
+br1:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.2
+br2:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.3
+br3:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.6
+br4:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.7
+br5:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.5
+c2-host:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.11
+robot1:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.12
+robot2:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.8
+robot3:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.10
+robot4:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.9
+robot5:
+    username: 
+    password: 
+    platform: linux
+    hostname: 172.20.20.4

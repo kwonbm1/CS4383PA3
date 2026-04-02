@@ -264,11 +264,11 @@ Deploy the app so the **end-to-end pipeline** works across clusters. **Remote se
 
 ### Cluster layout
 
-| Cluster | Role | Services |
-| ------- | ----- | -------- |
-| **C2** | Core | Ordering, Inventory, Pricing, Analytics |
-| **C3** | Warehouse | All 5 robots (bread, dairy, meat, produce, party) |
-| **Client** | Your team VM or Mac | Streamlit (points at C2 ordering NodePort) |
+| Cluster    | Role                | Services                                          |
+| ---------- | ------------------- | ------------------------------------------------- |
+| **C2**     | Core                | Ordering, Inventory, Pricing, Analytics           |
+| **C3**     | Warehouse           | All 5 robots (bread, dairy, meat, produce, party) |
+| **Client** | Your team VM or Mac | Streamlit (points at C2 ordering NodePort)        |
 
 Cluster master IPs: **C2=172.16.2.136**, **C3=172.16.3.137**. Deploy only in your team namespace (e.g. `team9`). This repo uses **team9** and **NodePorts in the 306xx range** to avoid conflicts with other teams.
 
@@ -313,20 +313,24 @@ The private registry (e.g. **Reg2** `192.168.1.129:5000` for teams 6–10) is no
 **On the team VM (e.g. team9-vm1):**
 
 1. **Install Docker** (if not already):
+
    ```bash
    sudo apt-get update && sudo apt-get install -y docker.io
    sudo systemctl enable --now docker
    sudo usermod -aG docker cc
    ```
+
    Log out and back in so `docker` works without sudo.
 
 2. **Allow insecure registry** (registry is HTTP):
+
    ```bash
    echo '{ "insecure-registries": ["192.168.1.129:5000"] }' | sudo tee /etc/docker/daemon.json
    sudo systemctl restart docker
    ```
 
 3. **Generate protobuf stubs** and fix imports (required so containers can import `proto` as a package):
+
    ```bash
    cd ~/CS4383PA2
    python3 -m venv .venv && source .venv/bin/activate
@@ -381,11 +385,11 @@ Wait until `ordering-service`, `inventory-service`, `pricing-service`, and `anal
 
 **Team10 NodePorts on C2:**
 
-| Service  | HTTP/gRPC | ZMQ  |
-| -------- | --------- | ----- |
-| Ordering | 30601     | 30657 |
-| Inventory| 30651 (gRPC) | 30656 |
-| Pricing  | 30652     | —     |
+| Service   | HTTP/gRPC    | ZMQ   |
+| --------- | ------------ | ----- |
+| Ordering  | 30601        | 30657 |
+| Inventory | 30651 (gRPC) | 30656 |
+| Pricing   | 30652        | —     |
 
 Health check: `curl http://localhost:30601/health` on C2 should return `{"status":"ok"}`.
 
@@ -433,13 +437,13 @@ You should see the order flow (HTTP → ordering → inventory → ZMQ to robots
 
 ### Environment variables (reference)
 
-| Variable | Used by | Meaning |
-| -------- | ------- | ------- |
-| `INVENTORY_HOST`, `INVENTORY_GRPC_PORT` | ordering, robots | Inventory (C2 IP + NodePort 30651) |
-| `INVENTORY_ZMQ_PORT` | robots | Inventory ZMQ (30656) |
-| `PRICING_HOST`, `PRICING_GRPC_PORT` | inventory | Pricing (same cluster: `pricing-service:50052`) |
-| `ORDERING_HOST`, `ORDERING_HTTP_PORT` | client | Ordering HTTP (C2 IP + 30601) |
-| `ORDERING_ZMQ_PORT`, `ORDERING_HOST` | analytics | Ordering ZMQ (same cluster: `ordering-service:5557`) |
+| Variable                                | Used by          | Meaning                                              |
+| --------------------------------------- | ---------------- | ---------------------------------------------------- |
+| `INVENTORY_HOST`, `INVENTORY_GRPC_PORT` | ordering, robots | Inventory (C2 IP + NodePort 30651)                   |
+| `INVENTORY_ZMQ_PORT`                    | robots           | Inventory ZMQ (30656)                                |
+| `PRICING_HOST`, `PRICING_GRPC_PORT`     | inventory        | Pricing (same cluster: `pricing-service:50052`)      |
+| `ORDERING_HOST`, `ORDERING_HTTP_PORT`   | client           | Ordering HTTP (C2 IP + 30601)                        |
+| `ORDERING_ZMQ_PORT`, `ORDERING_HOST`    | analytics        | Ordering ZMQ (same cluster: `ordering-service:5557`) |
 
 ---
 
@@ -500,35 +504,35 @@ python3 -m experiments.analyze_latencies
 
 This reads the raw per-request latency CSVs and generates:
 
-| Plot | Description |
-| ---- | ----------- |
-| `cdf_<scenario>.png` | CDF comparing refrigerator vs truck latency for each scenario |
-| `cdf_compare_api_order.png` | CDF comparing refrigerator latency across all scenarios |
-| `cdf_compare_api_restock.png` | CDF comparing truck latency across all scenarios |
-| `percentile_bars_api_order.png` | P50/P90/P95/P99 bar chart for refrigerator requests |
-| `percentile_bars_api_restock.png` | P50/P90/P95/P99 bar chart for truck requests |
-| `cdf_combined_all.png` | Combined CDF for all scenarios |
+| Plot                              | Description                                                   |
+| --------------------------------- | ------------------------------------------------------------- |
+| `cdf_<scenario>.png`              | CDF comparing refrigerator vs truck latency for each scenario |
+| `cdf_compare_api_order.png`       | CDF comparing refrigerator latency across all scenarios       |
+| `cdf_compare_api_restock.png`     | CDF comparing truck latency across all scenarios              |
+| `percentile_bars_api_order.png`   | P50/P90/P95/P99 bar chart for refrigerator requests           |
+| `percentile_bars_api_restock.png` | P50/P90/P95/P99 bar chart for truck requests                  |
+| `cdf_combined_all.png`            | Combined CDF for all scenarios                                |
 
 All plots are saved to `experiments/plots/`.
 
 ### Workload design
 
-| User class | Weight | Simulates | Request | Wait between requests |
-| ---------- | ------ | --------- | ------- | --------------------- |
-| `RefrigeratorUser` | 7 (70%) | Smart fridges | `POST /api/order` | 1–3 s |
-| `TruckUser` | 3 (30%) | Delivery trucks | `POST /api/restock` | 2–5 s |
+| User class         | Weight  | Simulates       | Request             | Wait between requests |
+| ------------------ | ------- | --------------- | ------------------- | --------------------- |
+| `RefrigeratorUser` | 7 (70%) | Smart fridges   | `POST /api/order`   | 1–3 s                 |
+| `TruckUser`        | 3 (30%) | Delivery trucks | `POST /api/restock` | 2–5 s                 |
 
 Refrigerators dominate traffic as specified in the assignment. Each grocery order randomly selects 1–10 items; each restock order selects 3–15 items with larger quantities.
 
 ### Experiment scenarios
 
-| Scenario | Users | Spawn Rate | Duration | Purpose |
-| -------- | ----- | ---------- | -------- | ------- |
-| low_load | 5 | 1/s | 60s | Baseline |
-| medium_load | 20 | 5/s | 90s | Moderate concurrency |
-| high_load | 50 | 10/s | 120s | Stress test |
-| burst | 100 | 50/s | 60s | Sudden spike |
-| ramp_up | 50 | 1/s | 180s | Gradual increase |
+| Scenario    | Users | Spawn Rate | Duration | Purpose              |
+| ----------- | ----- | ---------- | -------- | -------------------- |
+| low_load    | 5     | 1/s        | 60s      | Baseline             |
+| medium_load | 20    | 5/s        | 90s      | Moderate concurrency |
+| high_load   | 50    | 10/s       | 120s     | Stress test          |
+| burst       | 100   | 50/s       | 60s      | Sudden spike         |
+| ramp_up     | 50    | 1/s        | 180s     | Gradual increase     |
 
 ---
 
@@ -586,3 +590,158 @@ Cleanup:
 cd ~/CS4383PA3/containerlab/hil1
 ./scripts/destroy_hil1.sh
 ```
+
+## Milestone 2: ContainerLab HIL (Bridged LAN + Spanning Tree)
+
+### Overview
+
+For Milestone 2, we implemented a Layer 2 network simulation using ContainerLab to emulate a realistic multi-LAN environment with switching, loops, and spanning tree behavior.
+
+Instead of simple WAN forwarding, this setup models:
+
+- multiple LAN segments
+- interconnected bridges
+- redundant paths (loops)
+- dynamic MAC learning
+- spanning tree protocol (STP)
+
+---
+
+### Topology
+
+The network consists of:
+
+- 5 Linux bridge nodes (br1–br5)
+- 5 robot nodes (proxies for robots in Kubernetes clusters)
+- 1 host node representing the C2 inventory service
+- multiple LAN segments interconnected with loops
+
+This creates a realistic Ethernet-style network with redundancy and loop prevention.
+
+---
+
+### Key Concepts Implemented
+
+1.  Layer 2 Bridging  
+    Each bridge uses Linux bridging to forward packets based on MAC addresses.
+
+2.  MAC Learning  
+    Bridges dynamically learn MAC-to-port mappings using the forwarding database (FDB).
+
+3.  Spanning Tree Protocol (STP)  
+    STP is enabled on all bridges to prevent broadcast storms and disable redundant paths:
+
+        brctl stp br0 on
+
+---
+
+### Deployment Steps
+
+All steps were performed on VM3.
+
+#### 1. Deploy ContainerLab topology
+
+    cd ~/containerlab/hil2
+    sudo containerlab deploy -t topology.clab.yml
+
+#### 2. Configure bridges manually
+
+For each bridge (br1–br5):
+
+    sudo docker exec -it clab-hil2-brX bash
+
+Then inside the container:
+
+    brctl delbr br0 2>/dev/null || true
+    brctl addbr br0
+    brctl addif br0 eth1
+    brctl addif br0 eth2
+    brctl addif br0 eth3   # (or eth4 depending on bridge)
+    ip link set br0 up
+    brctl stp br0 on
+    exit
+
+Notes:
+
+- br3 uses eth1 eth2 eth3 eth4
+- br5 uses eth1 eth2
+
+#### 3. Assign IP addresses
+
+    sudo docker exec clab-hil2-robot1 ip addr add 10.0.0.11/24 dev eth1
+    sudo docker exec clab-hil2-robot2 ip addr add 10.0.0.12/24 dev eth1
+    sudo docker exec clab-hil2-robot3 ip addr add 10.0.0.13/24 dev eth1
+    sudo docker exec clab-hil2-robot4 ip addr add 10.0.0.14/24 dev eth1
+    sudo docker exec clab-hil2-robot5 ip addr add 10.0.0.15/24 dev eth1
+    sudo docker exec clab-hil2-c2-host ip addr add 10.0.0.10/24 dev eth1
+
+---
+
+### Integration with Kubernetes
+
+Robots communicate with the inventory service via the C2 cluster NodePort:
+
+    INVENTORY_HOST: "172.16.2.136"
+    INVENTORY_GRPC_PORT: "30651"
+    INVENTORY_ZMQ_PORT: "30656"
+
+ContainerLab is used to simulate network behavior (latency, loops, switching), while production traffic flows through the Kubernetes NodePort.
+
+---
+
+### Verification
+
+1. Connectivity test
+
+   sudo docker exec clab-hil2-robot1 ping -c 4 10.0.0.10
+
+Expected:
+
+- 0% packet loss
+- initial high latency followed by low latency
+
+2. Bridge configuration
+
+   sudo docker exec clab-hil2-br1 brctl show
+
+Expected:
+
+- multiple interfaces attached to br0
+
+3. MAC learning
+
+   sudo docker exec clab-hil2-br1 bridge fdb show
+
+Expected:
+
+- dynamically learned MAC entries
+
+---
+
+### Observations
+
+- Initial packets show higher latency due to flooding and ARP resolution
+- Later packets are significantly faster due to MAC learning
+- STP successfully disables redundant paths and stabilizes the network
+- The system avoids broadcast storms despite loops in the topology
+
+---
+
+### Results
+
+Latency measurements from Locust experiments show:
+
+- tight latency distribution (low variance)
+- consistent performance across request types
+- minimal overhead when routing directly through Kubernetes NodePort
+
+---
+
+### Conclusion
+
+This setup demonstrates:
+
+- realistic Layer 2 switching behavior
+- loop handling via spanning tree protocol
+- dynamic MAC learning and improved performance
+- successful integration of simulated network conditions with distributed services

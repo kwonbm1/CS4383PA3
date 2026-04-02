@@ -1,0 +1,672 @@
+{
+  "name": "hil2",
+  "type": "clab",
+  "clab": {
+    "config": {
+      "prefix": "clab",
+      "mgmt": {
+        "network": "clab",
+        "bridge": "br-06f49e441c08",
+        "ipv4-subnet": "172.20.20.0/24",
+        "ipv4-gw": "172.20.20.1",
+        "ipv6-subnet": "3fff:172:20:20::/64",
+        "ipv6-gw": "3fff:172:20:20::1",
+        "external-access": true
+      }
+    }
+  },
+  "ssh-pub-keys": ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbrOxJMQJMJ026M3xW6k2A29F0FyeWzOGNnuFYYhx2OWbMbw9/7IJpbRJyZvKVW9N8nEtYcw3sHOrs9MTafYoxKREJV0U1YJHm64/974dJ3HSNxGvYkL5I1ttFy99oGQvSrsvCm7/sfrzqn7falsy7PT4p+ArI3wDLdwQPjEQi/nwlgT2M/W5+xpgL0e3mZAyabLeejCcQ5SnBlkwF+quGNttn0OuOO1qJidNGRBPl1EUhs8KjzSreWK8Cw5rO1KJumTPrqezRulHRNX+1Y1KFE8kNlyso5ol0LoHaNWiE4yOSjkiPxDv3whvoRKcVOcXu4dXKEFmG7eICwau5orKV","ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH5hg71xt/tGAtIUv9yYgyu61N3IyjmD+fCcWeHsmXPm"],
+  "nodes": {
+    "br1": {
+      "index": "0",
+      "shortname": "br1",
+      "longname": "clab-hil2-br1",
+      "fqdn": "br1.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/br1",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.2",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::2",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/br1",
+        "clab-node-longname": "clab-hil2-br1",
+        "clab-node-name": "br1",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "br2": {
+      "index": "1",
+      "shortname": "br2",
+      "longname": "clab-hil2-br2",
+      "fqdn": "br2.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/br2",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.3",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::3",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/br2",
+        "clab-node-longname": "clab-hil2-br2",
+        "clab-node-name": "br2",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "br3": {
+      "index": "2",
+      "shortname": "br3",
+      "longname": "clab-hil2-br3",
+      "fqdn": "br3.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/br3",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.6",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::6",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/br3",
+        "clab-node-longname": "clab-hil2-br3",
+        "clab-node-name": "br3",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "br4": {
+      "index": "3",
+      "shortname": "br4",
+      "longname": "clab-hil2-br4",
+      "fqdn": "br4.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/br4",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.7",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::7",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/br4",
+        "clab-node-longname": "clab-hil2-br4",
+        "clab-node-name": "br4",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "br5": {
+      "index": "4",
+      "shortname": "br5",
+      "longname": "clab-hil2-br5",
+      "fqdn": "br5.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/br5",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.5",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::5",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/br5",
+        "clab-node-longname": "clab-hil2-br5",
+        "clab-node-name": "br5",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "c2-host": {
+      "index": "5",
+      "shortname": "c2-host",
+      "longname": "clab-hil2-c2-host",
+      "fqdn": "c2-host.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/c2-host",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.11",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::b",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/c2-host",
+        "clab-node-longname": "clab-hil2-c2-host",
+        "clab-node-name": "c2-host",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "robot1": {
+      "index": "6",
+      "shortname": "robot1",
+      "longname": "clab-hil2-robot1",
+      "fqdn": "robot1.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/robot1",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.12",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::c",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/robot1",
+        "clab-node-longname": "clab-hil2-robot1",
+        "clab-node-name": "robot1",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "robot2": {
+      "index": "7",
+      "shortname": "robot2",
+      "longname": "clab-hil2-robot2",
+      "fqdn": "robot2.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/robot2",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.8",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::8",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/robot2",
+        "clab-node-longname": "clab-hil2-robot2",
+        "clab-node-name": "robot2",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "robot3": {
+      "index": "8",
+      "shortname": "robot3",
+      "longname": "clab-hil2-robot3",
+      "fqdn": "robot3.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/robot3",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.10",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::a",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/robot3",
+        "clab-node-longname": "clab-hil2-robot3",
+        "clab-node-name": "robot3",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "robot4": {
+      "index": "9",
+      "shortname": "robot4",
+      "longname": "clab-hil2-robot4",
+      "fqdn": "robot4.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/robot4",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.9",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::9",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/robot4",
+        "clab-node-longname": "clab-hil2-robot4",
+        "clab-node-name": "robot4",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "robot5": {
+      "index": "10",
+      "shortname": "robot5",
+      "longname": "clab-hil2-robot5",
+      "fqdn": "robot5.hil2.io",
+      "group": "",
+      "labdir": "/home/cc/containerlab/hil2/clab-hil2/robot5",
+      "kind": "linux",
+      "image": "ghcr.io/hellt/network-multitool",
+      "mgmt-net": "",
+      "mgmt-intf": "",
+      "mgmt-ipv4-address": "172.20.20.4",
+      "mgmt-ipv4-prefix-length": 24,
+      "mgmt-ipv6-address": "3fff:172:20:20::4",
+      "mgmt-ipv6-prefix-length": 64,
+      "mac-address": "",
+      "labels": {
+        "clab-mgmt-net-bridge": "br-06f49e441c08",
+        "clab-node-group": "",
+        "clab-node-kind": "linux",
+        "clab-node-lab-dir": "/home/cc/containerlab/hil2/clab-hil2/robot5",
+        "clab-node-longname": "clab-hil2-robot5",
+        "clab-node-name": "robot5",
+        "clab-node-type": "",
+        "clab-owner": "cc",
+        "clab-topo-file": "/home/cc/containerlab/hil2/topology.clab.yml",
+        "containerlab": "hil2"
+      },
+      "port-bindings": [
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "host-ip": "",
+          "host-port": 0,
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  },
+  "links": [
+    {
+      "endpoints": {
+        "a": {
+          "node": "robot1",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:bb:02:5b",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br1",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:c8:a0:6d",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "robot2",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:a3:40:c4",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br2",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:d7:a7:5b",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "robot3",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:2f:e4:a5",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br1",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:1a:2f:58",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "robot3",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:92:9a:97",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br2",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:7c:24:74",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "robot4",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:be:12:55",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br3",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:be:62:75",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "br4",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:76:3c:e0",
+          "peer": "z"
+        },
+        "z": {
+          "node": "c2-host",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:79:f2:db",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "robot5",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:7f:2d:45",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br5",
+          "interface": "eth1",
+          "mac": "aa:c1:ab:99:17:af",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "br1",
+          "interface": "eth3",
+          "mac": "aa:c1:ab:fa:be:15",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br3",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:d9:b2:38",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "br2",
+          "interface": "eth3",
+          "mac": "aa:c1:ab:28:86:cc",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br3",
+          "interface": "eth3",
+          "mac": "aa:c1:ab:3b:ea:31",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "br3",
+          "interface": "eth4",
+          "mac": "aa:c1:ab:2a:31:e8",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br4",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:0b:01:5e",
+          "peer": "a"
+        }
+      }
+    },
+    {
+      "endpoints": {
+        "a": {
+          "node": "br4",
+          "interface": "eth3",
+          "mac": "aa:c1:ab:ea:08:27",
+          "peer": "z"
+        },
+        "z": {
+          "node": "br5",
+          "interface": "eth2",
+          "mac": "aa:c1:ab:53:6e:f0",
+          "peer": "a"
+        }
+      }
+    }
+  ]
+}

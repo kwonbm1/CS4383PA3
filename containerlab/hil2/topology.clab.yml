@@ -1,0 +1,46 @@
+name: hil2
+
+topology:
+  nodes:
+    # Bridges
+    br1: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    br2: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    br3: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    br4: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    br5: { kind: linux, image: ghcr.io/hellt/network-multitool }
+
+    # Hosts (robots + C2 proxy)
+    robot1: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    robot2: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    robot3: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    robot4: { kind: linux, image: ghcr.io/hellt/network-multitool }
+    robot5: { kind: linux, image: ghcr.io/hellt/network-multitool }
+
+    c2-host: { kind: linux, image: ghcr.io/hellt/network-multitool }
+
+  links:
+    # LAN1
+    - endpoints: ["robot1:eth1", "br1:eth1"]
+
+    # LAN2
+    - endpoints: ["robot2:eth1", "br2:eth1"]
+
+    # LAN3
+    - endpoints: ["robot3:eth1", "br1:eth2"]
+    - endpoints: ["robot3:eth2", "br2:eth2"]
+
+    # LAN4
+    - endpoints: ["robot4:eth1", "br3:eth1"]
+
+    # LAN5
+    - endpoints: ["br4:eth1", "c2-host:eth1"]
+
+    # LAN6
+    - endpoints: ["robot5:eth1", "br5:eth1"]
+
+    # Bridge connections (creates loops)
+    - endpoints: ["br1:eth3", "br3:eth2"]
+    - endpoints: ["br2:eth3", "br3:eth3"]
+    - endpoints: ["br3:eth4", "br4:eth2"]
+    - endpoints: ["br4:eth3", "br5:eth2"]
+
