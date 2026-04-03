@@ -763,93 +763,181 @@ This setup demonstrates:
 
 Milestone 3 runs the full Locust.io workload suite against the grocery ordering system in two configurations and compares tail latencies:
 
-1. **Without HIL** — traffic flows directly between K8s clusters over the network (no ContainerLab emulation in the path).
-2. **With HIL** — traffic between Cluster 1/2 traverses the OSPF WAN topology (HIL1) and traffic between Cluster 2/3 traverses the bridged LAN topology (HIL2).
+1. **Without HIL** — VM1 (Locust) talks directly to C2, robots on C3 talk directly to C2. No ContainerLab in the path.
+2. **With HIL** — VM1 (Locust) sends traffic through VM2 (HIL1 OSPF routers) to reach C2, and robots on C3 connect through VM3 (HIL2 bridged LAN) to reach C2's inventory.
 
-The same five scenarios (low\_load, medium\_load, high\_load, burst, ramp\_up) and the same 70/30 refrigerator/truck workload profile from PA2 are used so that results are directly comparable.
+The same five scenarios and 70/30 refrigerator/truck workload profile from PA2 are used so results are directly comparable.
+
+---
+
+### VM / Cluster Layout
+
+| Machine | IP | Role |
+| ------- | -- | ---- |
+| **VM1** (team VM) | 129.114.25.180 | Locust client, experiment runner |
+| **VM2** | 172.16.5.69 | HIL1 — OSPF WAN topology (ContainerLab) |
+| **VM3** | 172.16.5.214 | HIL2 — Bridged LAN topology (ContainerLab) |
+| **C2** | 172.16.2.136 | K8s cluster — ordering, inventory, pricing, analytics |
+| **C3** | 172.16.3.137 | K8s cluster — 5 robot pods |
+
+NodePorts (team9): ordering HTTP **30901**, ordering ZMQ **30907**, inventory gRPC **30951**, inventory ZMQ **30956**, pricing gRPC **30652**.
 
 ---
 
 ### Prerequisites
 
-- K8s services deployed on C2 (ordering, inventory, pricing, analytics) and C3 (robots) from Milestones 1 & 2
-- Python 3.10+ with dependencies installed (`pip install -r requirements.txt`)
-- For "with HIL" runs: both ContainerLab topologies deployed and traffic routed through them (see Milestones 1 & 2)
-- SSH tunnel to reach C2 ordering NodePort if running from a Mac:
+1. **K8s services running on C2 and C3.** Generate protobuf stubs, build Docker images, and deploy:
 
-```bash
-ssh -L 30601:172.16.2.136:30601 bastion
-```
+   ```bash
+   # On C2 and C3: generate protos (use matching grpcio-tools version)
+   cd ~/team9/CS4383PA3
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install grpcio-tools==1.76.0
+   python -m grpc_tools.protoc -I proto --python_out=proto --grpc_python_out=proto proto/*.proto
+
+   # Fix Dockerfile PYTHONPATH (both C2 and C3)
+   sed -i 's|ENV PYTHONPATH=/app$|ENV PYTHONPATH=/app:/app/proto|g' \
+       ordering_service/Dockerfile inventory_service/Dockerfile \
+       pricing_service/Dockerfile analytics_service/Dockerfile \
+       robot_service/Dockerfile
+   ```
+
+   On **C2** — build, push, and deploy core services:
+
+   ```bash
+   docker build -f pricing_service/Dockerfile . -t 192.168.1.129:5000/team9/pricing-service:latest
+   docker push 192.168.1.129:5000/team9/pricing-service:latest
+   docker build -f inventory_service/Dockerfile . -t 192.168.1.129:5000/team9/inventory-service:latest
+   docker push 192.168.1.129:5000/team9/inventory-service:latest
+   docker build -f ordering_service/Dockerfile . -t 192.168.1.129:5000/team9/ordering-service:latest
+   docker push 192.168.1.129:5000/team9/ordering-service:latest
+   docker build -f analytics_service/Dockerfile . -t 192.168.1.129:5000/team9/analytics-service:latest
+   docker push 192.168.1.129:5000/team9/analytics-service:latest
+
+   kubectl apply -f k8s/namespace.yaml
+   kubectl apply -f k8s/pricing-service.yaml
+   kubectl apply -f k8s/inventory-service.yaml
+   kubectl apply -f k8s/ordering-service.yaml
+   kubectl apply -f k8s/analytics-service.yaml
+   ```
+
+   On **C3** — build, push, and deploy robots:
+
+   ```bash
+   docker build -f robot_service/Dockerfile . -t 192.168.1.129:5000/team9/robot-service:latest
+   docker push 192.168.1.129:5000/team9/robot-service:latest
+
+   kubectl apply -f k8s/namespace.yaml
+   kubectl apply -f k8s/robots.yaml
+   ```
+
+   Update robots to point at C2's actual IP if needed:
+
+   ```bash
+   kubectl set env deployment/robot-bread deployment/robot-dairy deployment/robot-meat \
+       deployment/robot-produce deployment/robot-party -n team9 \
+       INVENTORY_HOST=172.16.2.136 INVENTORY_GRPC_PORT=30951 INVENTORY_ZMQ_PORT=30956
+   ```
+
+   Verify: `curl http://172.16.2.136:30901/health` should return `{"status":"ok"}`.
+
+2. **VM1 (team VM)** — clone repo, install Python dependencies:
+
+   ```bash
+   cd ~/CS4383PA3
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. **VM2 (HIL1)** and **VM3 (HIL2)** — deployed per Milestone 1 and 2 instructions with socat forwarding chains active.
 
 ---
 
 ### Experiment Scenarios
 
-| Scenario    | Users | Spawn Rate | Duration | Purpose              |
-| ----------- | ----- | ---------- | -------- | -------------------- |
-| low\_load   | 5     | 1/s        | 60s      | Baseline             |
-| medium\_load| 20    | 5/s        | 90s      | Moderate concurrency |
-| high\_load  | 50    | 10/s       | 120s     | Stress test          |
-| burst       | 100   | 50/s       | 60s      | Sudden spike         |
-| ramp\_up    | 50    | 1/s        | 180s     | Gradual increase     |
+| Scenario     | Users | Spawn Rate | Duration | Purpose              |
+| ------------ | ----- | ---------- | -------- | -------------------- |
+| low\_load    | 5     | 1/s        | 60s      | Baseline             |
+| medium\_load | 20    | 5/s        | 90s      | Moderate concurrency |
+| high\_load   | 50    | 10/s       | 120s     | Stress test          |
+| burst        | 100   | 50/s       | 60s      | Sudden spike         |
+| ramp\_up     | 50    | 1/s        | 180s     | Gradual increase     |
 
 ---
 
-### 1. Run experiments — Without HIL
+### Step 1: Run "Without HIL" experiments
 
-Make sure the ContainerLab topologies are **not** in the traffic path (services communicate directly via K8s NodePorts).
+Robots on C3 must point directly at C2:
+
+```bash
+# On C3
+kubectl set env deployment/robot-bread deployment/robot-dairy deployment/robot-meat \
+    deployment/robot-produce deployment/robot-party -n team9 \
+    INVENTORY_HOST=172.16.2.136 INVENTORY_GRPC_PORT=30951 INVENTORY_ZMQ_PORT=30956
+```
+
+Run from **VM1**:
 
 ```bash
 cd ~/CS4383PA3
-chmod +x experiments/PA3/run_pa3_experiments.sh
-
-./experiments/PA3/run_pa3_experiments.sh --mode without_hil --host http://localhost:30601
+source .venv/bin/activate
+bash experiments/PA3/run_pa3_experiments.sh --mode without_hil --host http://172.16.2.136:30901
 ```
 
-Results are saved to `experiments/PA3/results/without_hil/<scenario>/`.
+Results saved to `experiments/PA3/results/without_hil/`.
 
-### 2. Run experiments — With HIL
+### Step 2: Run "With HIL" experiments
 
-Deploy both ContainerLab topologies (HIL1 and HIL2) and ensure traffic is routed through them (see Milestone 1 and 2 deployment steps). Then run:
+Ensure HIL1 is deployed on VM2 and HIL2 is deployed on VM3 with socat forwarding active. Then point C3 robots through VM3:
 
 ```bash
-./experiments/PA3/run_pa3_experiments.sh --mode with_hil --host http://localhost:30601
+# On C3
+kubectl set env deployment/robot-bread deployment/robot-dairy deployment/robot-meat \
+    deployment/robot-produce deployment/robot-party -n team9 \
+    INVENTORY_HOST=172.16.5.214 INVENTORY_GRPC_PORT=30951 INVENTORY_ZMQ_PORT=30956
 ```
 
-Results are saved to `experiments/PA3/results/with_hil/<scenario>/`.
-
-### 3. Generate analysis and comparison plots
-
-Once both sets of experiments have completed:
+Run from **VM1** (traffic goes through VM2's OSPF topology):
 
 ```bash
-python3 -m experiments.PA3.analyze_pa3_latencies
+bash experiments/PA3/run_pa3_experiments.sh --mode with_hil --host http://172.16.5.69:30901
 ```
 
-Or with explicit directories:
+Results saved to `experiments/PA3/results/with_hil/`.
+
+### Step 3: Generate comparison plots
+
+On **VM1**:
 
 ```bash
-python3 -m experiments.PA3.analyze_pa3_latencies \
-    --results-dir experiments/PA3/results \
-    --plots-dir experiments/PA3/plots
+python3 experiments/PA3/analyze_pa3_latencies.py
 ```
 
-The script prints a summary table to stdout and saves all plots to `experiments/PA3/plots/`.
+Plots saved to `experiments/PA3/plots/`.
+
+### Step 4: Copy results to local machine
+
+```bash
+scp -i ~/.ssh/team10key -r cc@129.114.25.180:~/CS4383PA3/experiments/PA3/results \
+    experiments/PA3/results
+scp -i ~/.ssh/team10key -r cc@129.114.25.180:~/CS4383PA3/experiments/PA3/plots \
+    experiments/PA3/plots
+```
 
 ---
 
 ### Output Plots
 
-| Plot File                              | Description                                                                                       |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `cdf_<scenario>.png`                   | Per-scenario CDF overlay — refrigerator and truck latencies with and without HIL on the same axes |
-| `cdf_compare_api_order.png`            | Cross-scenario CDF for refrigerator requests, comparing with/without HIL                          |
-| `cdf_compare_api_restock.png`          | Cross-scenario CDF for truck requests, comparing with/without HIL                                 |
-| `percentile_bars_api_order.png`        | Grouped P50/P90/P95/P99 bar chart — refrigerator requests, with vs without HIL                    |
-| `percentile_bars_api_restock.png`      | Grouped P50/P90/P95/P99 bar chart — truck requests, with vs without HIL                           |
-| `hil_overhead_api_order.png`           | Absolute (ms) and percentage (%) latency increase from HIL — refrigerator requests                |
-| `hil_overhead_api_restock.png`         | Absolute (ms) and percentage (%) latency increase from HIL — truck requests                       |
-| `cdf_combined_all.png`                 | All scenarios and modes overlaid on a single CDF                                                  |
+| Plot File                         | Description                                                      |
+| --------------------------------- | ---------------------------------------------------------------- |
+| `cdf_<scenario>.png`              | Per-scenario CDF overlay (with vs without HIL)                   |
+| `cdf_compare_api_order.png`       | Cross-scenario CDF for refrigerator requests                     |
+| `cdf_compare_api_restock.png`     | Cross-scenario CDF for truck requests                            |
+| `percentile_bars_api_order.png`   | P50/P90/P95/P99 bar chart — refrigerator (with vs without HIL)   |
+| `percentile_bars_api_restock.png` | P50/P90/P95/P99 bar chart — truck (with vs without HIL)          |
+| `hil_overhead_api_order.png`      | Absolute and percentage latency overhead — refrigerator          |
+| `hil_overhead_api_restock.png`    | Absolute and percentage latency overhead — truck                 |
+| `cdf_combined_all.png`            | All scenarios and modes on a single CDF                          |
 
 ---
 
@@ -861,18 +949,8 @@ experiments/PA3/
 ├── run_pa3_experiments.sh        # Runner script (--mode with_hil|without_hil)
 ├── analyze_pa3_latencies.py      # Comparative analysis and plot generation
 ├── results/
-│   ├── without_hil/
-│   │   ├── low_load/             # CSV data per scenario
-│   │   ├── medium_load/
-│   │   ├── high_load/
-│   │   ├── burst/
-│   │   └── ramp_up/
+│   ├── without_hil/              # CSV data per scenario
 │   └── with_hil/
-│       ├── low_load/
-│       ├── medium_load/
-│       ├── high_load/
-│       ├── burst/
-│       └── ramp_up/
 └── plots/                        # Generated PNG plots
 ```
 

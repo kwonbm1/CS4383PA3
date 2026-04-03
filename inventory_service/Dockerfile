@@ -8,6 +8,6 @@ COPY proto/ proto/
 COPY fbschemas/ fbschemas/
 COPY inventory_service/ inventory_service/
 
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/proto
 EXPOSE 50051 5556
 CMD ["python", "-m", "inventory_service.server"]

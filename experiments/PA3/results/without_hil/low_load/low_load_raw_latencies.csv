@@ -1,0 +1,11 @@
+timestamp,request_type,name,response_time_ms,response_length,success,num_users
+1775165291.608889,POST,/api/restock [setup],20032.12,288,False,-1
+1775165291.6220808,POST,/api/restock [setup],18043.92,539,False,-1
+1775165291.6253016,POST,/api/restock,19047.59,539,False,-1
+1775165291.626585,POST,/api/restock [setup],17047.44,539,False,-1
+1775165291.6284502,POST,/api/restock,16047.69,539,False,-1
+1775165311.628078,POST,/api/order,20018.68,288,False,-1
+1775165311.629978,POST,/api/order,20007.39,539,False,-1
+1775165311.634086,POST,/api/order,20007.22,539,False,-1
+1775165311.6352355,POST,/api/restock,16510.44,539,False,-1
+1775165311.637873,POST,/api/restock,15055.87,539,False,-1

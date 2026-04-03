@@ -8,6 +8,6 @@ COPY proto/ proto/
 COPY fbschemas/ fbschemas/
 COPY robot_service/ robot_service/
 
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/proto
 # No EXPOSE: robot initiates outbound only
 CMD ["python", "-m", "robot_service.robot", "--aisle", "bread"]
