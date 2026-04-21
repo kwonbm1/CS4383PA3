@@ -772,13 +772,13 @@ The same five scenarios and 70/30 refrigerator/truck workload profile from PA2 a
 
 ### VM / Cluster Layout
 
-| Machine | IP | Role |
-| ------- | -- | ---- |
-| **VM1** (team VM) | 129.114.25.180 | Locust client, experiment runner |
-| **VM2** | 172.16.5.69 | HIL1 — OSPF WAN topology (ContainerLab) |
-| **VM3** | 172.16.5.214 | HIL2 — Bridged LAN topology (ContainerLab) |
-| **C2** | 172.16.2.136 | K8s cluster — ordering, inventory, pricing, analytics |
-| **C3** | 172.16.3.137 | K8s cluster — 5 robot pods |
+| Machine           | IP             | Role                                                  |
+| ----------------- | -------------- | ----------------------------------------------------- |
+| **VM1** (team VM) | 129.114.25.180 | Locust client, experiment runner                      |
+| **VM2**           | 172.16.5.69    | HIL1 — OSPF WAN topology (ContainerLab)               |
+| **VM3**           | 172.16.5.214   | HIL2 — Bridged LAN topology (ContainerLab)            |
+| **C2**            | 172.16.2.136   | K8s cluster — ordering, inventory, pricing, analytics |
+| **C3**            | 172.16.3.137   | K8s cluster — 5 robot pods                            |
 
 NodePorts (team9): ordering HTTP **30901**, ordering ZMQ **30907**, inventory gRPC **30951**, inventory ZMQ **30956**, pricing gRPC **30652**.
 
@@ -855,13 +855,13 @@ NodePorts (team9): ordering HTTP **30901**, ordering ZMQ **30907**, inventory gR
 
 ### Experiment Scenarios
 
-| Scenario     | Users | Spawn Rate | Duration | Purpose              |
-| ------------ | ----- | ---------- | -------- | -------------------- |
-| low\_load    | 5     | 1/s        | 60s      | Baseline             |
-| medium\_load | 20    | 5/s        | 90s      | Moderate concurrency |
-| high\_load   | 50    | 10/s       | 120s     | Stress test          |
-| burst        | 100   | 50/s       | 60s      | Sudden spike         |
-| ramp\_up     | 50    | 1/s        | 180s     | Gradual increase     |
+| Scenario    | Users | Spawn Rate | Duration | Purpose              |
+| ----------- | ----- | ---------- | -------- | -------------------- |
+| low_load    | 5     | 1/s        | 60s      | Baseline             |
+| medium_load | 20    | 5/s        | 90s      | Moderate concurrency |
+| high_load   | 50    | 10/s       | 120s     | Stress test          |
+| burst       | 100   | 50/s       | 60s      | Sudden spike         |
+| ramp_up     | 50    | 1/s        | 180s     | Gradual increase     |
 
 ---
 
@@ -928,16 +928,16 @@ scp -i ~/.ssh/team10key -r cc@129.114.25.180:~/CS4383PA3/experiments/PA3/plots \
 
 ### Output Plots
 
-| Plot File                         | Description                                                      |
-| --------------------------------- | ---------------------------------------------------------------- |
-| `cdf_<scenario>.png`              | Per-scenario CDF overlay (with vs without HIL)                   |
-| `cdf_compare_api_order.png`       | Cross-scenario CDF for refrigerator requests                     |
-| `cdf_compare_api_restock.png`     | Cross-scenario CDF for truck requests                            |
-| `percentile_bars_api_order.png`   | P50/P90/P95/P99 bar chart — refrigerator (with vs without HIL)   |
-| `percentile_bars_api_restock.png` | P50/P90/P95/P99 bar chart — truck (with vs without HIL)          |
-| `hil_overhead_api_order.png`      | Absolute and percentage latency overhead — refrigerator          |
-| `hil_overhead_api_restock.png`    | Absolute and percentage latency overhead — truck                 |
-| `cdf_combined_all.png`            | All scenarios and modes on a single CDF                          |
+| Plot File                         | Description                                                    |
+| --------------------------------- | -------------------------------------------------------------- |
+| `cdf_<scenario>.png`              | Per-scenario CDF overlay (with vs without HIL)                 |
+| `cdf_compare_api_order.png`       | Cross-scenario CDF for refrigerator requests                   |
+| `cdf_compare_api_restock.png`     | Cross-scenario CDF for truck requests                          |
+| `percentile_bars_api_order.png`   | P50/P90/P95/P99 bar chart — refrigerator (with vs without HIL) |
+| `percentile_bars_api_restock.png` | P50/P90/P95/P99 bar chart — truck (with vs without HIL)        |
+| `hil_overhead_api_order.png`      | Absolute and percentage latency overhead — refrigerator        |
+| `hil_overhead_api_restock.png`    | Absolute and percentage latency overhead — truck               |
+| `cdf_combined_all.png`            | All scenarios and modes on a single CDF                        |
 
 ---
 
@@ -964,3 +964,163 @@ experiments/PA3/
 | `TruckUser`        | 3 (30%) | Delivery trucks | `POST /api/restock` | 2–5 s                 |
 
 The workload is identical to PA2: refrigerators dominate traffic (~70%), each grocery order selects 1–10 random items, and each restock order selects 3–15 items with larger quantities.
+
+# 🚀 PA4 – Backup WAN (WAN2) Setup & Execution
+
+## Overview
+
+We implement a **redundant WAN path (WAN2)** from Cluster 1 (VM1) to the backup service cluster (C4) using ContainerLab on VM4.
+
+Traffic path:
+
+```
+VM1 → VM4 (host listener) → ingress-host → WAN2 routers → egress-host → C4 → ordering-service
+```
+
+---
+
+# ⚙️ Setup Instructions
+
+## 1. On C4 – Start Backup Service Forwarder
+
+This exposes the ordering service reliably via a host-level port.
+
+```bash
+ssh c4
+
+sudo apt update
+sudo apt install -y socat
+
+sudo socat TCP-LISTEN:40601,fork,reuseaddr TCP:127.0.0.1:30601
+```
+
+### Verify
+
+```bash
+curl http://127.0.0.1:40601
+```
+
+Expected:
+
+```
+404 Not Found
+```
+
+---
+
+## 2. On VM4 – Start WAN2 Forwarding Chain
+
+### Get container PIDs
+
+```bash
+ING_PID=$(sudo docker inspect -f '{{.State.Pid}}' clab-pa3-hil1-ingress-host)
+EGR_PID=$(sudo docker inspect -f '{{.State.Pid}}' clab-pa3-hil1-egress-host)
+```
+
+---
+
+### Start egress → C4 forwarding
+
+```bash
+sudo nsenter -t $EGR_PID -n socat TCP-LISTEN:40601,fork,reuseaddr TCP:172.16.4.151:40601
+```
+
+---
+
+### Start ingress → egress forwarding
+
+```bash
+sudo nsenter -t $ING_PID -n socat TCP-LISTEN:40601,fork,reuseaddr TCP:192.168.20.10:40601
+```
+
+---
+
+### Expose ingress to VM1
+
+```bash
+sudo socat TCP-LISTEN:40601,fork,reuseaddr TCP:172.20.20.6:40601
+```
+
+---
+
+## 3. Validate Backup Path
+
+### From VM4
+
+```bash
+curl http://172.20.20.6:40601
+```
+
+### From VM1
+
+```bash
+curl http://172.16.5.58:40601
+```
+
+Expected:
+
+```
+404 Not Found
+```
+
+This confirms:
+
+- WAN2 routing works
+- Forwarding chain is correct
+- C4 ordering service is reachable
+
+---
+
+# 📊 Running Backup Experiment
+
+On **VM1**:
+
+```bash
+cd ~/CS4383PA2
+source .venv/bin/activate
+
+./experiments/PA4/run_locust_experiments.sh http://172.16.5.58:40601
+```
+
+Generate plots:
+
+```bash
+python3 -m experiments.PA4.analyze_latencies
+```
+
+---
+
+# 🧠 Summary of Required Running Processes
+
+## C4
+
+```bash
+sudo socat TCP-LISTEN:40601,fork,reuseaddr TCP:127.0.0.1:30601
+```
+
+## VM4 (3 terminals)
+
+```bash
+# Terminal 1
+sudo nsenter -t $EGR_PID -n socat TCP-LISTEN:40601,fork,reuseaddr TCP:172.16.4.151:40601
+
+# Terminal 2
+sudo nsenter -t $ING_PID -n socat TCP-LISTEN:40601,fork,reuseaddr TCP:192.168.20.10:40601
+
+# Terminal 3
+sudo socat TCP-LISTEN:40601,fork,reuseaddr TCP:172.20.20.6:40601
+```
+
+---
+
+# ✅ Interpretation
+
+- `404 Not Found` = success (request reached ordering service)
+- Backup path restores performance when primary WAN is degraded
+- Demonstrates redundancy and fault tolerance
+
+---
+
+# 🔥 One-line Explanation
+
+> WAN2 provides an alternate routed path from clients to backup services (C4), and when the primary WAN is degraded, routing traffic through WAN2 restores latency and system performance.
